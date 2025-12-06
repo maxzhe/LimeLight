@@ -1,277 +1,261 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+
+<!DOCTYPE html>
 <html>
 <head>
-  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-  <meta http-equiv="Content-Style-Type" content="text/css">
-  <title></title>
-  <meta name="Generator" content="Cocoa HTML Writer">
-  <meta name="CocoaVersion" content="2685.1">
-  <style type="text/css">
-    p.p1 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Times; -webkit-text-stroke: #000000}
-    p.p2 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Times; -webkit-text-stroke: #000000; min-height: 14.0px}
-    span.s1 {font-kerning: none}
+  <meta charset="UTF-8" />
+  <title>Music Preferences Visualizer (ECharts)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- Telegram WebApp script -->
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <!-- ECharts library -->
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif; margin: 10px;
+      background: #f0f0f0; color: #333;
+    }
+    h2 { text-align: center; }
+    #charts { display: flex; flex-direction: column; align-items: center; }
+    .chart-box { width: 300px; height: 300px; max-width: 90%; margin: 20px 0; }
+    #controls { margin: 10px 0; text-align: center; }
+    #sliders .slider-row {
+      margin: 5px 0; display: flex; align-items: center;
+    }
+    .slider-row span.dim-name { width: 200px; text-align: right; margin-right: 10px; }
+    .slider-row input[type=range] { flex: 1; }
+    .slider-row span.dim-value { width: 40px; text-align: left; margin-left: 10px; }
+    #year-controls { margin: 10px 0; }
+    #year-controls select { margin: 0 5px; }
+    #applyBtn { padding: 8px 16px; font-size: 16px; }
   </style>
 </head>
 <body>
-<p class="p1"><span class="s1">&lt;!DOCTYPE html&gt;</span></p>
-<p class="p1"><span class="s1">&lt;html&gt;</span></p>
-<p class="p1"><span class="s1">&lt;head&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>&lt;meta charset="UTF-8" /&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>&lt;title&gt;Music Preferences Visualizer (ECharts)&lt;/title&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>&lt;meta name="viewport" content="width=device-width, initial-scale=1.0" /&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>&lt;!-- Telegram WebApp script --&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>&lt;script src="https://telegram.org/js/telegram-web-app.js"&gt;&lt;/script&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>&lt;!-- ECharts library --&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>&lt;script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"&gt;&lt;/script&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>&lt;style&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>body {</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>font-family: Arial, sans-serif; margin: 10px;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>background: #f0f0f0; color: #333;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>}</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>h2 { text-align: center; }</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>#charts { display: flex; flex-direction: column; align-items: center; }</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>.chart-box { width: 300px; height: 300px; max-width: 90%; margin: 20px 0; }</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>#controls { margin: 10px 0; text-align: center; }</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>#sliders .slider-row {</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>margin: 5px 0; display: flex; align-items: center;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>}</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>.slider-row span.dim-name { width: 200px; text-align: right; margin-right: 10px; }</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>.slider-row input[type=range] { flex: 1; }</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>.slider-row span.dim-value { width: 40px; text-align: left; margin-left: 10px; }</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>#year-controls { margin: 10px 0; }</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>#year-controls select { margin: 0 5px; }</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>#applyBtn { padding: 8px 16px; font-size: 16px; }</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>&lt;/style&gt;</span></p>
-<p class="p1"><span class="s1">&lt;/head&gt;</span></p>
-<p class="p1"><span class="s1">&lt;body&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>&lt;h2&gt;🎵 Refine Your Music Profile&lt;/h2&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>&lt;div id="charts"&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;div id="mainRadar" class="chart-box"&gt;&lt;/div&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;div id="detailRadar" class="chart-box"&gt;&lt;/div&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>&lt;/div&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>&lt;div id="controls"&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;label for="categorySelect"&gt;&lt;strong&gt;Category:&lt;/strong&gt;&lt;/label&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;select id="categorySelect"&gt;&lt;/select&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>&lt;/div&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>&lt;div id="sliders"&gt;&lt;/div&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>&lt;div id="year-controls"&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;label&gt;&lt;strong&gt;Year From:&lt;/strong&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>&lt;select id="yearFrom"&gt;&lt;/select&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;/label&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;label&gt;&lt;strong&gt;To:&lt;/strong&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>&lt;select id="yearTo"&gt;&lt;/select&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;/label&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>&lt;/div&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>&lt;div style="text-align:center;"&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;button id="applyBtn"&gt;✅ Apply Changes&lt;/button&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>&lt;/div&gt;</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>&lt;script&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>(() =&gt; {</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>const tg = window.Telegram.WebApp;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>tg.expand();</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>// 1. Parse initial vector and year range from URL</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>const urlParams = new URLSearchParams(window.location.search);</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>const vectorParam = urlParams.get('vector');</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>let initialVector = [];</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>if (vectorParam) {</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>initialVector = vectorParam.split(',').map(x =&gt; {</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">          </span>const val = parseInt(x, 10);</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">          </span>return isNaN(val) ? 0 : val;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>});</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>}</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>while (initialVector.length &lt; 58) initialVector.push(0);</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>initialVector = initialVector.slice(0, 58);</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>const yearFromParam = urlParams.get('year_from');</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>const yearToParam <span class="Apple-converted-space">  </span>= urlParams.get('year_to');</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>// 2. Define categories and sub-dimension labels</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>const categories = [</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>{ name: "Vocals", length: 7, labels: [</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>"Vocal Register", "Vocal Timbre Thin/Full", "Vocal Breathiness",</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>"Vocal Smoothness", "Vocal Grittiness", "Vocal Nasality", "Vocal Accompaniment"</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">          </span>] },</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>{ name: "Harmony", length: 2, labels: [</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>"Minor/Major Tonality", "Harmonic Sophistication"</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">          </span>] },</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>{ name: "Rhythm", length: 10, labels: [</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>"Tempo", "Cut Time Feel", "Triple Meter", "Compound Meter", "Odd Meter",</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>"Swing Feel", "Shuffle Feel", "Syncopation", "Backbeat", "Danceability"</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">          </span>] },</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>{ name: "Instrumentation", length: 16, labels: [</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>"Drum Set", "Drum Aggressiveness", "Synthetic Drums", "Percussion",</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>"Electric Guitar", "Guitar Distortion", "Acoustic Guitar", "String Ensemble",</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>"Horn Ensemble", "Piano", "Organ", "Rhodes", "Synthesizer", "Synth Timbre",</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>"Bass Guitar", "Reed Instrument"</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">          </span>] },</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>{ name: "Lyrics", length: 8, labels: [</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>"Angry Lyrics", "Sad Lyrics", "Happy Lyrics", "Humorous Lyrics", "Love Lyrics",</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>"Political Lyrics", "Abstract Lyrics", "Explicit Lyrics"</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">          </span>] },</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>{ name: "Sonority", length: 6, labels: [</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>"Live Recording", "Audio Production", "Aural Intensity",</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>"Acoustic Sonority", "Electric Sonority", "Synthetic Sonority"</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">          </span>] },</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>{ name: "Composition", length: 9, labels: [</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>"Focus Lead Vocal", "Focus Lyrics", "Focus Melody", "Focus Vocal Acc.",</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>"Focus Groove", "Focus Arrangement", "Focus Form", "Focus Riffs", "Focus Performance"</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">          </span>] }</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>];</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>let idx = 0;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>categories.forEach(cat =&gt; { cat.start = idx; idx += cat.length; });</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>// 3. Populate category select options</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>const categorySelect = document.getElementById('categorySelect');</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>categories.forEach((cat, i) =&gt; {</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>const opt = document.createElement('option');</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>opt.value = i;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>opt.textContent = cat.name;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>categorySelect.appendChild(opt);</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>});</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>categorySelect.value = "0";</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>// 4. Populate year range select options</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>const yearFromSel = document.getElementById('yearFrom');</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>const yearToSel <span class="Apple-converted-space">  </span>= document.getElementById('yearTo');</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>const minYear = 1900, maxYear = 2025;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>for (let y = minYear; y &lt;= maxYear; y++) {</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>const optF = document.createElement('option');</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>optF.value = y; optF.textContent = y;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>yearFromSel.appendChild(optF);</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>const optT = document.createElement('option');</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>optT.value = y; optT.textContent = y;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>yearToSel.appendChild(optT);</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>}</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>yearFromSel.value = yearFromParam || minYear;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>yearToSel.value <span class="Apple-converted-space">  </span>= yearToParam <span class="Apple-converted-space">  </span>|| maxYear;</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>// 5. Helper: calculate category averages</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>function calcCategoryAverages(vec) {</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>return categories.map(cat =&gt; {</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">          </span>let sum = 0;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">          </span>for (let j = 0; j &lt; cat.length; j++) {</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>let val = vec[cat.start + j];</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>if (isNaN(val)) val = 0;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>sum += val;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">          </span>}</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">          </span>return cat.length ? Math.round(sum / cat.length) : 0;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>});</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>}</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>let categoryData = calcCategoryAverages(initialVector);</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>// 6. Initialize ECharts radar instances</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>const mainChart <span class="Apple-converted-space">  </span>= echarts.init(document.getElementById('mainRadar'));</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>const detailChart = echarts.init(document.getElementById('detailRadar'));</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>// Main 7-category radar configuration</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>const mainOption = {</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>tooltip: {},<span class="Apple-converted-space">  </span>// hover tooltip</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>radar: {</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">          </span>indicator: categories.map(cat =&gt; ({ name: cat.name, max: 100 })),</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">          </span>radius: '70%'<span class="Apple-converted-space">  </span>// size of radar relative to container</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>},</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>series: [{</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">          </span>name: 'Overall Profile',</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">          </span>type: 'radar',</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">          </span>data: [{ value: categoryData, name: 'Profile' }],</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">          </span>areaStyle: { opacity: 0.2 },</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">          </span>itemStyle: { color: '#884EA0' }<span class="Apple-converted-space">  </span>// purple</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>}]</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>};</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>mainChart.setOption(mainOption);</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>// 7. Function to render detail radar and sliders for a given category</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>function renderDetailCategory(catIndex) {</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>const cat = categories[catIndex];</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>// Prepare detail radar option for this category</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>const indicators = cat.labels.map(label =&gt; ({ name: label, max: 100 }));</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>const values = initialVector.slice(cat.start, cat.start + cat.length).map(v =&gt; isNaN(v) ? 0 : v);</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>const detailOption = {</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">          </span>tooltip: {},</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">          </span>radar: {</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>indicator: indicators,</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>radius: '70%'</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">          </span>},</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">          </span>series: [{</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>name: cat.name + " Details",</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>type: 'radar',</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>data: [{ value: values, name: cat.name }],</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>areaStyle: { opacity: 0.2 },</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>itemStyle: { color: '#36A2EB' }<span class="Apple-converted-space">  </span>// blue</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">          </span>}]</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>};</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>detailChart.setOption(detailOption, true);<span class="Apple-converted-space">  </span>// notMerge: replace previous option</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>// Build sliders for this category's sub-dimensions</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>const slidersDiv = document.getElementById('sliders');</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>slidersDiv.innerHTML = "";</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>for (let j = 0; j &lt; cat.length; j++) {</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">          </span>const dimIndex = cat.start + j;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">          </span>const dimName<span class="Apple-converted-space">  </span>= cat.labels[j];</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">          </span>const dimValue = isNaN(initialVector[dimIndex]) ? 0 : initialVector[dimIndex];</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">          </span>const row = document.createElement('div');</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">          </span>row.className = 'slider-row';</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">          </span>const nameSpan = document.createElement('span');</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">          </span>nameSpan.className = 'dim-name';</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">          </span>nameSpan.textContent = dimName;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">          </span>const slider = document.createElement('input');</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">          </span>slider.type = 'range'; slider.min = 0; slider.max = 100;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">          </span>slider.value = dimValue;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">          </span>slider.dataset.index = dimIndex;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">          </span>const valueSpan = document.createElement('span');</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">          </span>valueSpan.className = 'dim-value';</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">          </span>valueSpan.textContent = dimValue;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">          </span>// Slider input event: update values and charts</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">          </span>slider.addEventListener('input', () =&gt; {</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>const val = parseInt(slider.value, 10);</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>const idx = parseInt(slider.dataset.index, 10);</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>initialVector[idx] = isNaN(val) ? 0 : val;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>valueSpan.textContent = val;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>// Update detail chart's data for this category</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>const newValues = initialVector.slice(cat.start, cat.start + cat.length);</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>detailChart.setOption({ series: [{ data: [{ value: newValues, name: cat.name }] }] });</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>// Update main chart's average for this category</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>const newAvg = calcCategoryAverages(initialVector)[catIndex];</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>categoryData[catIndex] = newAvg;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>mainChart.setOption({ series: [{ data: [{ value: categoryData, name: 'Profile' }] }] });</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">          </span>});</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">          </span>row.appendChild(nameSpan);</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">          </span>row.appendChild(slider);</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">          </span>row.appendChild(valueSpan);</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">          </span>slidersDiv.appendChild(row);</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>}</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>}</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>// 8. Initial render for category 0</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>renderDetailCategory(0);</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>// 9. Handle category selection change</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>categorySelect.addEventListener('change', () =&gt; {</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>const newIdx = parseInt(categorySelect.value, 10);</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>renderDetailCategory(newIdx);</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>});</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>// 10. Apply changes (send data to bot)</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>document.getElementById('applyBtn').addEventListener('click', () =&gt; {</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>const fromYear = parseInt(yearFromSel.value, 10);</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>const toYear <span class="Apple-converted-space">  </span>= parseInt(yearToSel.value, 10);</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>if (fromYear &gt; toYear) {</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">          </span>alert("The 'From Year' must be &lt;= 'To Year'.");</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">          </span>return;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>}</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>const data = {</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">          </span>vector: initialVector.map(x =&gt; Math.round(x)),</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">          </span>year_from: fromYear,</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">          </span>year_to: toYear</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>};</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>tg.sendData(JSON.stringify(data));</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>tg.close();</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>});</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>})();</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>&lt;/script&gt;</span></p>
-<p class="p1"><span class="s1">&lt;/body&gt;</span></p>
-<p class="p1"><span class="s1">&lt;/html&gt;</span></p>
+  <h2>🎵 Refine Your Music Profile</h2>
+  <div id="charts">
+    <div id="mainRadar" class="chart-box"></div>
+    <div id="detailRadar" class="chart-box"></div>
+  </div>
+  <div id="controls">
+    <label for="categorySelect"><strong>Category:</strong></label>
+    <select id="categorySelect"></select>
+  </div>
+  <div id="sliders"></div>
+  <div id="year-controls">
+    <label><strong>Year From:</strong>
+      <select id="yearFrom"></select>
+    </label>
+    <label><strong>To:</strong>
+      <select id="yearTo"></select>
+    </label>
+  </div>
+  <div style="text-align:center;">
+    <button id="applyBtn">✅ Apply Changes</button>
+  </div>
+
+  <script>
+    (() => {
+      const tg = window.Telegram.WebApp;
+      tg.expand();
+
+      // 1. Parse initial vector and year range from URL
+      const urlParams = new URLSearchParams(window.location.search);
+      const vectorParam = urlParams.get('vector');
+      let initialVector = [];
+      if (vectorParam) {
+        initialVector = vectorParam.split(',').map(x => {
+          const val = parseInt(x, 10);
+          return isNaN(val) ? 0 : val;
+        });
+      }
+      while (initialVector.length < 58) initialVector.push(0);
+      initialVector = initialVector.slice(0, 58);
+      const yearFromParam = urlParams.get('year_from');
+      const yearToParam   = urlParams.get('year_to');
+
+      // 2. Define categories and sub-dimension labels
+      const categories = [
+        { name: "Vocals", length: 7, labels: [
+            "Vocal Register", "Vocal Timbre Thin/Full", "Vocal Breathiness",
+            "Vocal Smoothness", "Vocal Grittiness", "Vocal Nasality", "Vocal Accompaniment"
+          ] },
+        { name: "Harmony", length: 2, labels: [
+            "Minor/Major Tonality", "Harmonic Sophistication"
+          ] },
+        { name: "Rhythm", length: 10, labels: [
+            "Tempo", "Cut Time Feel", "Triple Meter", "Compound Meter", "Odd Meter",
+            "Swing Feel", "Shuffle Feel", "Syncopation", "Backbeat", "Danceability"
+          ] },
+        { name: "Instrumentation", length: 16, labels: [
+            "Drum Set", "Drum Aggressiveness", "Synthetic Drums", "Percussion",
+            "Electric Guitar", "Guitar Distortion", "Acoustic Guitar", "String Ensemble",
+            "Horn Ensemble", "Piano", "Organ", "Rhodes", "Synthesizer", "Synth Timbre",
+            "Bass Guitar", "Reed Instrument"
+          ] },
+        { name: "Lyrics", length: 8, labels: [
+            "Angry Lyrics", "Sad Lyrics", "Happy Lyrics", "Humorous Lyrics", "Love Lyrics",
+            "Political Lyrics", "Abstract Lyrics", "Explicit Lyrics"
+          ] },
+        { name: "Sonority", length: 6, labels: [
+            "Live Recording", "Audio Production", "Aural Intensity",
+            "Acoustic Sonority", "Electric Sonority", "Synthetic Sonority"
+          ] },
+        { name: "Composition", length: 9, labels: [
+            "Focus Lead Vocal", "Focus Lyrics", "Focus Melody", "Focus Vocal Acc.",
+            "Focus Groove", "Focus Arrangement", "Focus Form", "Focus Riffs", "Focus Performance"
+          ] }
+      ];
+      let idx = 0;
+      categories.forEach(cat => { cat.start = idx; idx += cat.length; });
+
+      // 3. Populate category select options
+      const categorySelect = document.getElementById('categorySelect');
+      categories.forEach((cat, i) => {
+        const opt = document.createElement('option');
+        opt.value = i;
+        opt.textContent = cat.name;
+        categorySelect.appendChild(opt);
+      });
+      categorySelect.value = "0";
+
+      // 4. Populate year range select options
+      const yearFromSel = document.getElementById('yearFrom');
+      const yearToSel   = document.getElementById('yearTo');
+      const minYear = 1900, maxYear = 2025;
+      for (let y = minYear; y <= maxYear; y++) {
+        const optF = document.createElement('option');
+        optF.value = y; optF.textContent = y;
+        yearFromSel.appendChild(optF);
+        const optT = document.createElement('option');
+        optT.value = y; optT.textContent = y;
+        yearToSel.appendChild(optT);
+      }
+      yearFromSel.value = yearFromParam || minYear;
+      yearToSel.value   = yearToParam   || maxYear;
+
+      // 5. Helper: calculate category averages
+      function calcCategoryAverages(vec) {
+        return categories.map(cat => {
+          let sum = 0;
+          for (let j = 0; j < cat.length; j++) {
+            let val = vec[cat.start + j];
+            if (isNaN(val)) val = 0;
+            sum += val;
+          }
+          return cat.length ? Math.round(sum / cat.length) : 0;
+        });
+      }
+      let categoryData = calcCategoryAverages(initialVector);
+
+      // 6. Initialize ECharts radar instances
+      const mainChart   = echarts.init(document.getElementById('mainRadar'));
+      const detailChart = echarts.init(document.getElementById('detailRadar'));
+
+      // Main 7-category radar configuration
+      const mainOption = {
+        tooltip: {},  // hover tooltip
+        radar: {
+          indicator: categories.map(cat => ({ name: cat.name, max: 100 })),
+          radius: '70%'  // size of radar relative to container
+        },
+        series: [{
+          name: 'Overall Profile',
+          type: 'radar',
+          data: [{ value: categoryData, name: 'Profile' }],
+          areaStyle: { opacity: 0.2 },
+          itemStyle: { color: '#884EA0' }  // purple
+        }]
+      };
+      mainChart.setOption(mainOption);
+
+      // 7. Function to render detail radar and sliders for a given category
+      function renderDetailCategory(catIndex) {
+        const cat = categories[catIndex];
+        // Prepare detail radar option for this category
+        const indicators = cat.labels.map(label => ({ name: label, max: 100 }));
+        const values = initialVector.slice(cat.start, cat.start + cat.length).map(v => isNaN(v) ? 0 : v);
+        const detailOption = {
+          tooltip: {},
+          radar: {
+            indicator: indicators,
+            radius: '70%'
+          },
+          series: [{
+            name: cat.name + " Details",
+            type: 'radar',
+            data: [{ value: values, name: cat.name }],
+            areaStyle: { opacity: 0.2 },
+            itemStyle: { color: '#36A2EB' }  // blue
+          }]
+        };
+        detailChart.setOption(detailOption, true);  // notMerge: replace previous option
+
+        // Build sliders for this category's sub-dimensions
+        const slidersDiv = document.getElementById('sliders');
+        slidersDiv.innerHTML = "";
+        for (let j = 0; j < cat.length; j++) {
+          const dimIndex = cat.start + j;
+          const dimName  = cat.labels[j];
+          const dimValue = isNaN(initialVector[dimIndex]) ? 0 : initialVector[dimIndex];
+
+          const row = document.createElement('div');
+          row.className = 'slider-row';
+          const nameSpan = document.createElement('span');
+          nameSpan.className = 'dim-name';
+          nameSpan.textContent = dimName;
+          const slider = document.createElement('input');
+          slider.type = 'range'; slider.min = 0; slider.max = 100;
+          slider.value = dimValue;
+          slider.dataset.index = dimIndex;
+          const valueSpan = document.createElement('span');
+          valueSpan.className = 'dim-value';
+          valueSpan.textContent = dimValue;
+          // Slider input event: update values and charts
+          slider.addEventListener('input', () => {
+            const val = parseInt(slider.value, 10);
+            const idx = parseInt(slider.dataset.index, 10);
+            initialVector[idx] = isNaN(val) ? 0 : val;
+            valueSpan.textContent = val;
+            // Update detail chart's data for this category
+            const newValues = initialVector.slice(cat.start, cat.start + cat.length);
+            detailChart.setOption({ series: [{ data: [{ value: newValues, name: cat.name }] }] });
+            // Update main chart's average for this category
+            const newAvg = calcCategoryAverages(initialVector)[catIndex];
+            categoryData[catIndex] = newAvg;
+            mainChart.setOption({ series: [{ data: [{ value: categoryData, name: 'Profile' }] }] });
+          });
+          row.appendChild(nameSpan);
+          row.appendChild(slider);
+          row.appendChild(valueSpan);
+          slidersDiv.appendChild(row);
+        }
+      }
+
+      // 8. Initial render for category 0
+      renderDetailCategory(0);
+
+      // 9. Handle category selection change
+      categorySelect.addEventListener('change', () => {
+        const newIdx = parseInt(categorySelect.value, 10);
+        renderDetailCategory(newIdx);
+      });
+
+      // 10. Apply changes (send data to bot)
+      document.getElementById('applyBtn').addEventListener('click', () => {
+        const fromYear = parseInt(yearFromSel.value, 10);
+        const toYear   = parseInt(yearToSel.value, 10);
+        if (fromYear > toYear) {
+          alert("The 'From Year' must be <= 'To Year'.");
+          return;
+        }
+        const data = {
+          vector: initialVector.map(x => Math.round(x)),
+          year_from: fromYear,
+          year_to: toYear
+        };
+        tg.sendData(JSON.stringify(data));
+        tg.close();
+      });
+    })();
+  </script>
 </body>
 </html>
