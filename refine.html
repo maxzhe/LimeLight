@@ -12,40 +12,95 @@
       background: #f0f0f0; color: #333;
     }
     h2 { text-align: center; }
+
     #charts { display: flex; flex-direction: column; align-items: center; }
     .chart-box { width: 300px; height: 300px; max-width: 90%; margin: 20px 0; }
 
-    #controls { margin: 10px 0; text-align: center; display: flex; gap: 12px; justify-content: center; align-items: center; flex-wrap: wrap; }
+    #controls {
+      margin: 10px 0;
+      text-align: center;
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      align-items: center;
+      flex-wrap: wrap;
+    }
 
-    #sliders { width: 100%; max-width: 720px; margin: 0 auto; }
+    #sliders { width: 100%; max-width: 820px; margin: 0 auto; }
+
     #sliders .slider-row {
       margin: 6px 0;
       display: grid;
-      grid-template-columns: 24px 200px 1fr 44px;
+      grid-template-columns: 24px 1fr 1.6fr 60px;
       gap: 8px;
       align-items: center;
       background: #fff;
-      padding: 6px 8px;
-      border-radius: 8px;
+      padding: 8px 10px;
+      border-radius: 10px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.04);
     }
+
     .slider-row.disabled {
       opacity: 0.45;
     }
 
-    .slider-row span.dim-name {
-      text-align: right;
+    .dim-name-wrap {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 6px;
+      min-width: 0;
     }
+
+    .dim-name {
+      text-align: right;
+      font-size: 13px;
+      line-height: 1.1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 360px;
+    }
+
+    .info-dot {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #eee;
+      color: #444;
+      font-size: 11px;
+      cursor: help;
+      user-select: none;
+      flex: 0 0 auto;
+    }
+
     .slider-row input[type=range] {
       width: 100%;
     }
-    .slider-row span.dim-value {
+
+    .dim-value {
       text-align: left;
+      font-weight: 600;
+      font-size: 12px;
+      color: #222;
     }
 
     #year-controls { margin: 10px 0; text-align: center; }
     #year-controls select { margin: 0 5px; }
 
-    #applyBtn { padding: 8px 16px; font-size: 16px; }
+    #applyBtn {
+      padding: 8px 16px;
+      font-size: 16px;
+      border-radius: 10px;
+      border: 0;
+      background: #222;
+      color: #fff;
+      cursor: pointer;
+    }
+    #applyBtn:active { transform: translateY(1px); }
   </style>
 </head>
 <body>
@@ -86,7 +141,9 @@
       const tg = window.Telegram.WebApp;
       tg.expand();
 
+      // -----------------------------
       // 1) Parse initial vector + optional mask + year range from URL
+      // -----------------------------
       const urlParams = new URLSearchParams(window.location.search);
 
       const vectorParam = urlParams.get('vector');
@@ -100,7 +157,6 @@
       while (initialVector.length < 58) initialVector.push(0);
       initialVector = initialVector.slice(0, 58);
 
-      // Optional mask param (comma-separated 0/1 or true/false)
       const maskParam = urlParams.get('mask');
       let activeMask = new Array(58).fill(true);
       if (maskParam) {
@@ -115,42 +171,102 @@
       const yearFromParam = urlParams.get('year_from');
       const yearToParam   = urlParams.get('year_to');
 
-      // 2) Define categories and sub-dimension labels
-      const categories = [
-        { name: "Vocals", length: 7, labels: [
-            "Vocal Register", "Vocal Timbre Thin/Full", "Vocal Breathiness",
-            "Vocal Smoothness", "Vocal Grittiness", "Vocal Nasality", "Vocal Accompaniment"
-          ] },
-        { name: "Harmony", length: 2, labels: [
-            "Minor/Major Tonality", "Harmonic Sophistication"
-          ] },
-        { name: "Rhythm", length: 10, labels: [
-            "Tempo", "Cut Time Feel", "Triple Meter", "Compound Meter", "Odd Meter",
-            "Swing Feel", "Shuffle Feel", "Syncopation", "Backbeat", "Danceability"
-          ] },
-        { name: "Instrumentation", length: 16, labels: [
-            "Drum Set", "Drum Aggressiveness", "Synthetic Drums", "Percussion",
-            "Electric Guitar", "Guitar Distortion", "Acoustic Guitar", "String Ensemble",
-            "Horn Ensemble", "Piano", "Organ", "Rhodes", "Synthesizer", "Synth Timbre",
-            "Bass Guitar", "Reed Instrument"
-          ] },
-        { name: "Lyrics", length: 8, labels: [
-            "Angry Lyrics", "Sad Lyrics", "Happy Lyrics", "Humorous Lyrics", "Love Lyrics",
-            "Political Lyrics", "Abstract Lyrics", "Explicit Lyrics"
-          ] },
-        { name: "Sonority", length: 6, labels: [
-            "Live Recording", "Audio Production", "Aural Intensity",
-            "Acoustic Sonority", "Electric Sonority", "Synthetic Sonority"
-          ] },
-        { name: "Composition", length: 9, labels: [
-            "Focus Lead Vocal", "Focus Lyrics", "Focus Melody", "Focus Vocal Acc.",
-            "Focus Groove", "Focus Arrangement", "Focus Form", "Focus Riffs", "Focus Performance"
-          ] }
-      ];
-      let idx = 0;
-      categories.forEach(cat => { cat.start = idx; idx += cat.length; });
+      // -----------------------------
+      // 2) Dimension definitions (name + description)
+      // -----------------------------
+      const DIM_DEFS = [
+        // VOCALS 1-7
+        { name: "Vocal Register", desc: "Lead vocal range from low to high." },
+        { name: "Vocal Timbre Thin/Full", desc: "Timbre from thin/wispy to full/resonant." },
+        { name: "Vocal Breathiness", desc: "Airiness or breath in the vocal delivery." },
+        { name: "Vocal Smoothness", desc: "Smooth, non-raspy vocal quality." },
+        { name: "Vocal Grittiness", desc: "Rough/raspy or gritty vocal texture." },
+        { name: "Vocal Nasality", desc: "Nasal, pinched, ‘plugged-up’ vocal tone." },
+        { name: "Vocal Accompaniment", desc: "Importance of backing/secondary vocals (incl. vocal layers/samples)." },
 
-      // 3) Populate category select
+        // HARMONY 8-9
+        { name: "Minor/Major Tonality", desc: "Whether the harmonic feel leans minor, major, or ambiguous." },
+        { name: "Harmonic Sophistication", desc: "Harmony complexity from simple to more chromatic/advanced." },
+
+        // RHYTHM 10-19
+        { name: "Tempo", desc: "Perceived speed of the song." },
+        { name: "Cut Time Feel", desc: "Half-time/cut-time rhythmic feel." },
+        { name: "Triple Meter", desc: "Presence of 3-based meter (e.g., 3/4)." },
+        { name: "Compound Meter", desc: "Compound feel combining triple + duple groupings." },
+        { name: "Odd Meter", desc: "Presence of odd meters (5, 7, etc.)." },
+        { name: "Swing Feel", desc: "Uneven 8th-note swing (long-short)." },
+        { name: "Shuffle Feel", desc: "Stronger, more articulated swing/shuffle groove." },
+        { name: "Syncopation", desc: "Offbeat emphasis, rhythmic surprise/complexity." },
+        { name: "Backbeat", desc: "Emphasis on beats 2 and 4." },
+        { name: "Danceability", desc: "How suitable the groove is for dancing." },
+
+        // INSTRUMENTATION 20-35
+        { name: "Drum Set", desc: "Presence/dominance of acoustic drum kit." },
+        { name: "Drum Aggressiveness", desc: "Hard-hitting or intense drum performance." },
+        { name: "Synthetic Drums", desc: "Programmed/electronic drum presence." },
+        { name: "Percussion", desc: "Non-kit percussion prominence." },
+        { name: "Electric Guitar", desc: "Presence/dominance of electric guitars." },
+        { name: "Guitar Distortion", desc: "Amount of distortion from clean to dirty." },
+        { name: "Acoustic Guitar", desc: "Presence/dominance of acoustic guitars." },
+        { name: "String Ensemble", desc: "Presence of orchestral strings." },
+        { name: "Horn Ensemble", desc: "Presence of brass/woodwinds in ensemble context." },
+        { name: "Piano", desc: "Presence/dominance of piano." },
+        { name: "Organ", desc: "Presence/dominance of organ." },
+        { name: "Rhodes", desc: "Presence of Fender Rhodes/electric piano." },
+        { name: "Synthesizer", desc: "Presence/dominance of synths." },
+        { name: "Synth Timbre", desc: "Synth character from ambient to robotic/industrial." },
+        { name: "Bass Guitar", desc: "Presence/dominance of bass guitar." },
+        { name: "Reed Instrument", desc: "Presence of reeds (sax, clarinet, etc.)." },
+
+        // LYRICS 36-43
+        { name: "Angry Lyrics", desc: "Anger/aggression in lyrical themes." },
+        { name: "Sad Lyrics", desc: "Sadness/melancholy in lyrical themes." },
+        { name: "Happy Lyrics", desc: "Joyful/positive lyrical themes." },
+        { name: "Humorous Lyrics", desc: "Comedy, wit, playful lyricism." },
+        { name: "Love Lyrics", desc: "Romance/love themes." },
+        { name: "Political Lyrics", desc: "Social/political subject matter." },
+        { name: "Abstract Lyrics", desc: "Surreal, abstract or whimsical lyricism." },
+        { name: "Explicit Lyrics", desc: "Profanity/explicit content level." },
+
+        // SONORITY 44-49
+        { name: "Live Recording", desc: "Live vs studio capture feel." },
+        { name: "Audio Production", desc: "Perceived polish/quality of production." },
+        { name: "Aural Intensity", desc: "Overall loudness/softness and sonic force." },
+        { name: "Acoustic Sonority", desc: "Acoustic instrumentation dominance." },
+        { name: "Electric Sonority", desc: "Electric instrumentation dominance." },
+        { name: "Synthetic Sonority", desc: "Electronic/synthetic texture dominance." },
+
+        // COMPOSITION 50-58
+        { name: "Focus Lead Vocal", desc: "How central the lead vocal is to the track." },
+        { name: "Focus Lyrics", desc: "How central lyrical content is." },
+        { name: "Focus Melody", desc: "How central melodic writing is." },
+        { name: "Focus Vocal Acc.", desc: "Importance of backing vocals/layers." },
+        { name: "Focus Groove", desc: "Importance of rhythmic feel/groove." },
+        { name: "Focus Arrangement", desc: "Importance of orchestration/arrangement detail." },
+        { name: "Focus Form", desc: "Importance of structure/sections." },
+        { name: "Focus Riffs", desc: "Importance of repeating instrumental hooks/riffs." },
+        { name: "Focus Performance", desc: "Importance of instrumental/performer virtuosity/energy." },
+      ];
+
+      // Safety check
+      while (DIM_DEFS.length < 58) DIM_DEFS.push({ name: "Unknown", desc: "No description available." });
+
+      // -----------------------------
+      // 3) Categories (map to DIM_DEFS by index)
+      // -----------------------------
+      const categories = [
+        { name: "Vocals",        start: 0,  length: 7  },
+        { name: "Harmony",       start: 7,  length: 2  },
+        { name: "Rhythm",        start: 9,  length: 10 },
+        { name: "Instrumentation", start: 19, length: 16 },
+        { name: "Lyrics",        start: 35, length: 8  },
+        { name: "Sonority",      start: 43, length: 6  },
+        { name: "Composition",   start: 49, length: 9  },
+      ];
+
+      // -----------------------------
+      // 4) Populate category select
+      // -----------------------------
       const categorySelect = document.getElementById('categorySelect');
       categories.forEach((cat, i) => {
         const opt = document.createElement('option');
@@ -160,14 +276,18 @@
       });
       categorySelect.value = "0";
 
-      // 4) Year dropdowns
+      // -----------------------------
+      // 5) Year dropdowns
+      // -----------------------------
       const yearFromSel = document.getElementById('yearFrom');
       const yearToSel   = document.getElementById('yearTo');
       const minYear = 1900, maxYear = 2025;
+
       for (let y = minYear; y <= maxYear; y++) {
         const optF = document.createElement('option');
         optF.value = y; optF.textContent = y;
         yearFromSel.appendChild(optF);
+
         const optT = document.createElement('option');
         optT.value = y; optT.textContent = y;
         yearToSel.appendChild(optT);
@@ -175,7 +295,9 @@
       yearFromSel.value = yearFromParam || minYear;
       yearToSel.value   = yearToParam   || maxYear;
 
-      // 5) Helpers using mask
+      // -----------------------------
+      // 6) Mask helpers
+      // -----------------------------
       function categoryHasAnyEnabled(catIndex) {
         const cat = categories[catIndex];
         for (let j = 0; j < cat.length; j++) {
@@ -208,14 +330,14 @@
         });
       }
 
-      // 6) Charts
+      // -----------------------------
+      // 7) Charts
+      // -----------------------------
       const mainChart   = echarts.init(document.getElementById('mainRadar'));
       const detailChart = echarts.init(document.getElementById('detailRadar'));
 
-      let categoryData = calcCategoryAverages(initialVector);
-
       function renderMainRadar() {
-        categoryData = calcCategoryAverages(initialVector);
+        const categoryData = calcCategoryAverages(initialVector);
         const mainOption = {
           tooltip: {},
           radar: {
@@ -235,7 +357,12 @@
 
       function renderDetailRadar(catIndex) {
         const cat = categories[catIndex];
-        const indicators = cat.labels.map(label => ({ name: label, max: 100 }));
+        const indicators = [];
+
+        for (let j = 0; j < cat.length; j++) {
+          const di = cat.start + j;
+          indicators.push({ name: DIM_DEFS[di].name, max: 100 });
+        }
 
         const values = [];
         for (let j = 0; j < cat.length; j++) {
@@ -258,7 +385,9 @@
         detailChart.setOption(detailOption, true);
       }
 
-      // 7) Sliders + per-dim toggles
+      // -----------------------------
+      // 8) Sliders + per-dim toggles + descriptions
+      // -----------------------------
       const categoryEnabledChk = document.getElementById('categoryEnabledChk');
 
       function syncCategoryCheckbox(catIndex) {
@@ -268,9 +397,7 @@
       function renderDetailCategory(catIndex) {
         const cat = categories[catIndex];
 
-        // Category-level checkbox behavior
         syncCategoryCheckbox(catIndex);
-
         renderDetailRadar(catIndex);
 
         const slidersDiv = document.getElementById('sliders');
@@ -278,23 +405,38 @@
 
         for (let j = 0; j < cat.length; j++) {
           const dimIndex = cat.start + j;
-          const dimName  = cat.labels[j];
+          const def = DIM_DEFS[dimIndex];
+
           const dimValue = isNaN(initialVector[dimIndex]) ? 0 : initialVector[dimIndex];
           const enabled  = !!activeMask[dimIndex];
 
           const row = document.createElement('div');
           row.className = 'slider-row' + (enabled ? '' : ' disabled');
 
-          // per-dim enable checkbox
+          // Per-dim enable checkbox
           const useChk = document.createElement('input');
           useChk.type = 'checkbox';
           useChk.checked = enabled;
-          useChk.title = "Include this dimension";
+          useChk.title = "Include this dimension in similarity";
+
+          // Name + tooltip
+          const nameWrap = document.createElement('span');
+          nameWrap.className = 'dim-name-wrap';
 
           const nameSpan = document.createElement('span');
           nameSpan.className = 'dim-name';
-          nameSpan.textContent = dimName;
+          nameSpan.textContent = def.name;
+          nameSpan.title = def.desc;
 
+          const info = document.createElement('span');
+          info.className = 'info-dot';
+          info.textContent = "ℹ️";
+          info.title = def.desc;
+
+          nameWrap.appendChild(nameSpan);
+          nameWrap.appendChild(info);
+
+          // Slider
           const slider = document.createElement('input');
           slider.type = 'range';
           slider.min = 0; slider.max = 100;
@@ -302,11 +444,11 @@
           slider.dataset.index = dimIndex;
           slider.disabled = !enabled;
 
+          // Value display
           const valueSpan = document.createElement('span');
           valueSpan.className = 'dim-value';
           valueSpan.textContent = enabled ? dimValue : "Nan";
 
-          // slider updates
           slider.addEventListener('input', () => {
             const val = parseInt(slider.value, 10);
             const idx = parseInt(slider.dataset.index, 10);
@@ -317,7 +459,6 @@
             renderMainRadar();
           });
 
-          // per-dim checkbox updates
           useChk.addEventListener('change', () => {
             activeMask[dimIndex] = useChk.checked;
             slider.disabled = !useChk.checked;
@@ -330,41 +471,44 @@
           });
 
           row.appendChild(useChk);
-          row.appendChild(nameSpan);
+          row.appendChild(nameWrap);
           row.appendChild(slider);
           row.appendChild(valueSpan);
           slidersDiv.appendChild(row);
         }
 
-        // When category checkbox changes: enable/disable ALL dims in this category
+        // Category checkbox toggles all dims in the category
         categoryEnabledChk.onchange = () => {
           const enabled = categoryEnabledChk.checked;
           setCategoryEnabled(catIndex, enabled);
-          renderDetailCategory(catIndex); // re-render UI rows
+          renderDetailCategory(catIndex); // re-render rows
           renderMainRadar();
         };
       }
 
-      // 8) Initial render
+      // -----------------------------
+      // 9) Initial render
+      // -----------------------------
       renderMainRadar();
       renderDetailCategory(0);
 
-      // 9) Category selection change
       categorySelect.addEventListener('change', () => {
         const newIdx = parseInt(categorySelect.value, 10);
         renderDetailCategory(newIdx);
       });
 
+      // -----------------------------
       // 10) Apply changes -> send vector + mask
+      // -----------------------------
       document.getElementById('applyBtn').addEventListener('click', () => {
         const fromYear = parseInt(yearFromSel.value, 10);
         const toYear   = parseInt(yearToSel.value, 10);
+
         if (fromYear > toYear) {
           alert("The 'From Year' must be <= 'To Year'.");
           return;
         }
 
-        // sanity: avoid sending empty mask
         const anyEnabled = activeMask.some(Boolean);
         if (!anyEnabled) {
           alert("You disabled all dimensions. Please enable at least one.");
@@ -377,6 +521,7 @@
           year_from: fromYear,
           year_to: toYear
         };
+
         tg.sendData(JSON.stringify(data));
         tg.close();
       });
@@ -385,4 +530,5 @@
   </script>
 </body>
 </html>
+
 
