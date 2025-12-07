@@ -1,13 +1,10 @@
-
 <!DOCTYPE html>
 <html>
 <head>
   <meta charset="UTF-8" />
   <title>Music Preferences Visualizer (ECharts)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <!-- Telegram WebApp script -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <!-- ECharts library -->
   <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
   <style>
     body {
@@ -17,29 +14,60 @@
     h2 { text-align: center; }
     #charts { display: flex; flex-direction: column; align-items: center; }
     .chart-box { width: 300px; height: 300px; max-width: 90%; margin: 20px 0; }
-    #controls { margin: 10px 0; text-align: center; }
+
+    #controls { margin: 10px 0; text-align: center; display: flex; gap: 12px; justify-content: center; align-items: center; flex-wrap: wrap; }
+
+    #sliders { width: 100%; max-width: 720px; margin: 0 auto; }
     #sliders .slider-row {
-      margin: 5px 0; display: flex; align-items: center;
+      margin: 6px 0;
+      display: grid;
+      grid-template-columns: 24px 200px 1fr 44px;
+      gap: 8px;
+      align-items: center;
+      background: #fff;
+      padding: 6px 8px;
+      border-radius: 8px;
     }
-    .slider-row span.dim-name { width: 200px; text-align: right; margin-right: 10px; }
-    .slider-row input[type=range] { flex: 1; }
-    .slider-row span.dim-value { width: 40px; text-align: left; margin-left: 10px; }
-    #year-controls { margin: 10px 0; }
+    .slider-row.disabled {
+      opacity: 0.45;
+    }
+
+    .slider-row span.dim-name {
+      text-align: right;
+    }
+    .slider-row input[type=range] {
+      width: 100%;
+    }
+    .slider-row span.dim-value {
+      text-align: left;
+    }
+
+    #year-controls { margin: 10px 0; text-align: center; }
     #year-controls select { margin: 0 5px; }
+
     #applyBtn { padding: 8px 16px; font-size: 16px; }
   </style>
 </head>
 <body>
   <h2>🎵 Refine Your Music Profile</h2>
+
   <div id="charts">
     <div id="mainRadar" class="chart-box"></div>
     <div id="detailRadar" class="chart-box"></div>
   </div>
+
   <div id="controls">
     <label for="categorySelect"><strong>Category:</strong></label>
     <select id="categorySelect"></select>
+
+    <label style="display:flex; align-items:center; gap:6px;">
+      <input type="checkbox" id="categoryEnabledChk" checked />
+      <strong>Use this category</strong>
+    </label>
   </div>
+
   <div id="sliders"></div>
+
   <div id="year-controls">
     <label><strong>Year From:</strong>
       <select id="yearFrom"></select>
@@ -48,6 +76,7 @@
       <select id="yearTo"></select>
     </label>
   </div>
+
   <div style="text-align:center;">
     <button id="applyBtn">✅ Apply Changes</button>
   </div>
@@ -57,8 +86,9 @@
       const tg = window.Telegram.WebApp;
       tg.expand();
 
-      // 1. Parse initial vector and year range from URL
+      // 1) Parse initial vector + optional mask + year range from URL
       const urlParams = new URLSearchParams(window.location.search);
+
       const vectorParam = urlParams.get('vector');
       let initialVector = [];
       if (vectorParam) {
@@ -69,10 +99,23 @@
       }
       while (initialVector.length < 58) initialVector.push(0);
       initialVector = initialVector.slice(0, 58);
+
+      // Optional mask param (comma-separated 0/1 or true/false)
+      const maskParam = urlParams.get('mask');
+      let activeMask = new Array(58).fill(true);
+      if (maskParam) {
+        const parsed = maskParam.split(',').map(x => {
+          const t = String(x).trim().toLowerCase();
+          return (t === '1' || t === 'true' || t === 'yes');
+        });
+        while (parsed.length < 58) parsed.push(true);
+        activeMask = parsed.slice(0, 58);
+      }
+
       const yearFromParam = urlParams.get('year_from');
       const yearToParam   = urlParams.get('year_to');
 
-      // 2. Define categories and sub-dimension labels
+      // 2) Define categories and sub-dimension labels
       const categories = [
         { name: "Vocals", length: 7, labels: [
             "Vocal Register", "Vocal Timbre Thin/Full", "Vocal Breathiness",
@@ -107,7 +150,7 @@
       let idx = 0;
       categories.forEach(cat => { cat.start = idx; idx += cat.length; });
 
-      // 3. Populate category select options
+      // 3) Populate category select
       const categorySelect = document.getElementById('categorySelect');
       categories.forEach((cat, i) => {
         const opt = document.createElement('option');
@@ -117,7 +160,7 @@
       });
       categorySelect.value = "0";
 
-      // 4. Populate year range select options
+      // 4) Year dropdowns
       const yearFromSel = document.getElementById('yearFrom');
       const yearToSel   = document.getElementById('yearTo');
       const minYear = 1900, maxYear = 2025;
@@ -132,114 +175,187 @@
       yearFromSel.value = yearFromParam || minYear;
       yearToSel.value   = yearToParam   || maxYear;
 
-      // 5. Helper: calculate category averages
+      // 5) Helpers using mask
+      function categoryHasAnyEnabled(catIndex) {
+        const cat = categories[catIndex];
+        for (let j = 0; j < cat.length; j++) {
+          if (activeMask[cat.start + j]) return true;
+        }
+        return false;
+      }
+
+      function setCategoryEnabled(catIndex, enabled) {
+        const cat = categories[catIndex];
+        for (let j = 0; j < cat.length; j++) {
+          activeMask[cat.start + j] = enabled;
+        }
+      }
+
       function calcCategoryAverages(vec) {
-        return categories.map(cat => {
+        return categories.map((cat) => {
           let sum = 0;
+          let count = 0;
           for (let j = 0; j < cat.length; j++) {
-            let val = vec[cat.start + j];
+            const di = cat.start + j;
+            if (!activeMask[di]) continue;
+            let val = vec[di];
             if (isNaN(val)) val = 0;
             sum += val;
+            count++;
           }
-          return cat.length ? Math.round(sum / cat.length) : 0;
+          if (count === 0) return 0;
+          return Math.round(sum / count);
         });
       }
-      let categoryData = calcCategoryAverages(initialVector);
 
-      // 6. Initialize ECharts radar instances
+      // 6) Charts
       const mainChart   = echarts.init(document.getElementById('mainRadar'));
       const detailChart = echarts.init(document.getElementById('detailRadar'));
 
-      // Main 7-category radar configuration
-      const mainOption = {
-        tooltip: {},  // hover tooltip
-        radar: {
-          indicator: categories.map(cat => ({ name: cat.name, max: 100 })),
-          radius: '70%'  // size of radar relative to container
-        },
-        series: [{
-          name: 'Overall Profile',
-          type: 'radar',
-          data: [{ value: categoryData, name: 'Profile' }],
-          areaStyle: { opacity: 0.2 },
-          itemStyle: { color: '#884EA0' }  // purple
-        }]
-      };
-      mainChart.setOption(mainOption);
+      let categoryData = calcCategoryAverages(initialVector);
 
-      // 7. Function to render detail radar and sliders for a given category
-      function renderDetailCategory(catIndex) {
-        const cat = categories[catIndex];
-        // Prepare detail radar option for this category
-        const indicators = cat.labels.map(label => ({ name: label, max: 100 }));
-        const values = initialVector.slice(cat.start, cat.start + cat.length).map(v => isNaN(v) ? 0 : v);
-        const detailOption = {
+      function renderMainRadar() {
+        categoryData = calcCategoryAverages(initialVector);
+        const mainOption = {
           tooltip: {},
           radar: {
-            indicator: indicators,
+            indicator: categories.map(cat => ({ name: cat.name, max: 100 })),
             radius: '70%'
           },
+          series: [{
+            name: 'Overall Profile',
+            type: 'radar',
+            data: [{ value: categoryData, name: 'Profile' }],
+            areaStyle: { opacity: 0.2 },
+            itemStyle: { color: '#884EA0' }
+          }]
+        };
+        mainChart.setOption(mainOption, true);
+      }
+
+      function renderDetailRadar(catIndex) {
+        const cat = categories[catIndex];
+        const indicators = cat.labels.map(label => ({ name: label, max: 100 }));
+
+        const values = [];
+        for (let j = 0; j < cat.length; j++) {
+          const di = cat.start + j;
+          const v = isNaN(initialVector[di]) ? 0 : initialVector[di];
+          values.push(activeMask[di] ? v : 0);
+        }
+
+        const detailOption = {
+          tooltip: {},
+          radar: { indicator: indicators, radius: '70%' },
           series: [{
             name: cat.name + " Details",
             type: 'radar',
             data: [{ value: values, name: cat.name }],
             areaStyle: { opacity: 0.2 },
-            itemStyle: { color: '#36A2EB' }  // blue
+            itemStyle: { color: '#36A2EB' }
           }]
         };
-        detailChart.setOption(detailOption, true);  // notMerge: replace previous option
+        detailChart.setOption(detailOption, true);
+      }
 
-        // Build sliders for this category's sub-dimensions
+      // 7) Sliders + per-dim toggles
+      const categoryEnabledChk = document.getElementById('categoryEnabledChk');
+
+      function syncCategoryCheckbox(catIndex) {
+        categoryEnabledChk.checked = categoryHasAnyEnabled(catIndex);
+      }
+
+      function renderDetailCategory(catIndex) {
+        const cat = categories[catIndex];
+
+        // Category-level checkbox behavior
+        syncCategoryCheckbox(catIndex);
+
+        renderDetailRadar(catIndex);
+
         const slidersDiv = document.getElementById('sliders');
         slidersDiv.innerHTML = "";
+
         for (let j = 0; j < cat.length; j++) {
           const dimIndex = cat.start + j;
           const dimName  = cat.labels[j];
           const dimValue = isNaN(initialVector[dimIndex]) ? 0 : initialVector[dimIndex];
+          const enabled  = !!activeMask[dimIndex];
 
           const row = document.createElement('div');
-          row.className = 'slider-row';
+          row.className = 'slider-row' + (enabled ? '' : ' disabled');
+
+          // per-dim enable checkbox
+          const useChk = document.createElement('input');
+          useChk.type = 'checkbox';
+          useChk.checked = enabled;
+          useChk.title = "Include this dimension";
+
           const nameSpan = document.createElement('span');
           nameSpan.className = 'dim-name';
           nameSpan.textContent = dimName;
+
           const slider = document.createElement('input');
-          slider.type = 'range'; slider.min = 0; slider.max = 100;
+          slider.type = 'range';
+          slider.min = 0; slider.max = 100;
           slider.value = dimValue;
           slider.dataset.index = dimIndex;
+          slider.disabled = !enabled;
+
           const valueSpan = document.createElement('span');
           valueSpan.className = 'dim-value';
-          valueSpan.textContent = dimValue;
-          // Slider input event: update values and charts
+          valueSpan.textContent = enabled ? dimValue : "Nan";
+
+          // slider updates
           slider.addEventListener('input', () => {
             const val = parseInt(slider.value, 10);
             const idx = parseInt(slider.dataset.index, 10);
             initialVector[idx] = isNaN(val) ? 0 : val;
             valueSpan.textContent = val;
-            // Update detail chart's data for this category
-            const newValues = initialVector.slice(cat.start, cat.start + cat.length);
-            detailChart.setOption({ series: [{ data: [{ value: newValues, name: cat.name }] }] });
-            // Update main chart's average for this category
-            const newAvg = calcCategoryAverages(initialVector)[catIndex];
-            categoryData[catIndex] = newAvg;
-            mainChart.setOption({ series: [{ data: [{ value: categoryData, name: 'Profile' }] }] });
+
+            renderDetailRadar(catIndex);
+            renderMainRadar();
           });
+
+          // per-dim checkbox updates
+          useChk.addEventListener('change', () => {
+            activeMask[dimIndex] = useChk.checked;
+            slider.disabled = !useChk.checked;
+            row.classList.toggle('disabled', !useChk.checked);
+            valueSpan.textContent = useChk.checked ? slider.value : "Nan";
+
+            syncCategoryCheckbox(catIndex);
+            renderDetailRadar(catIndex);
+            renderMainRadar();
+          });
+
+          row.appendChild(useChk);
           row.appendChild(nameSpan);
           row.appendChild(slider);
           row.appendChild(valueSpan);
           slidersDiv.appendChild(row);
         }
+
+        // When category checkbox changes: enable/disable ALL dims in this category
+        categoryEnabledChk.onchange = () => {
+          const enabled = categoryEnabledChk.checked;
+          setCategoryEnabled(catIndex, enabled);
+          renderDetailCategory(catIndex); // re-render UI rows
+          renderMainRadar();
+        };
       }
 
-      // 8. Initial render for category 0
+      // 8) Initial render
+      renderMainRadar();
       renderDetailCategory(0);
 
-      // 9. Handle category selection change
+      // 9) Category selection change
       categorySelect.addEventListener('change', () => {
         const newIdx = parseInt(categorySelect.value, 10);
         renderDetailCategory(newIdx);
       });
 
-      // 10. Apply changes (send data to bot)
+      // 10) Apply changes -> send vector + mask
       document.getElementById('applyBtn').addEventListener('click', () => {
         const fromYear = parseInt(yearFromSel.value, 10);
         const toYear   = parseInt(yearToSel.value, 10);
@@ -247,15 +363,26 @@
           alert("The 'From Year' must be <= 'To Year'.");
           return;
         }
+
+        // sanity: avoid sending empty mask
+        const anyEnabled = activeMask.some(Boolean);
+        if (!anyEnabled) {
+          alert("You disabled all dimensions. Please enable at least one.");
+          return;
+        }
+
         const data = {
           vector: initialVector.map(x => Math.round(x)),
+          mask: activeMask,
           year_from: fromYear,
           year_to: toYear
         };
         tg.sendData(JSON.stringify(data));
         tg.close();
       });
+
     })();
   </script>
 </body>
 </html>
+
