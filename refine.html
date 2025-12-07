@@ -6,6 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+
   <style>
     body {
       font-family: Arial, sans-serif; margin: 10px;
@@ -40,9 +41,7 @@
       box-shadow: 0 1px 2px rgba(0,0,0,0.04);
     }
 
-    .slider-row.disabled {
-      opacity: 0.45;
-    }
+    .slider-row.disabled { opacity: 0.45; }
 
     .dim-name-wrap {
       display: flex;
@@ -62,24 +61,26 @@
       max-width: 360px;
     }
 
-    .info-dot {
+    /* Use a real button for mobile tap */
+    .info-dot-btn {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      width: 18px;
-      height: 18px;
+      width: 20px;
+      height: 20px;
       border-radius: 50%;
-      background: #eee;
+      background: #f1f1f1;
       color: #444;
       font-size: 11px;
-      cursor: help;
+      border: 1px solid #e3e3e3;
+      cursor: pointer;
       user-select: none;
       flex: 0 0 auto;
+      padding: 0;
     }
+    .info-dot-btn:active { transform: translateY(1px); }
 
-    .slider-row input[type=range] {
-      width: 100%;
-    }
+    .slider-row input[type=range] { width: 100%; }
 
     .dim-value {
       text-align: left;
@@ -101,6 +102,49 @@
       cursor: pointer;
     }
     #applyBtn:active { transform: translateY(1px); }
+
+    /* -----------------------------
+       Modal for descriptions (mobile-friendly)
+       ----------------------------- */
+    #descOverlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.35);
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+      z-index: 9999;
+    }
+    #descOverlay.show { display: flex; }
+
+    #descSheet {
+      width: min(720px, 100%);
+      background: #fff;
+      border-radius: 14px 14px 0 0;
+      padding: 14px 16px 18px 16px;
+      box-shadow: 0 -6px 18px rgba(0,0,0,0.12);
+    }
+    #descTitle {
+      font-size: 16px;
+      font-weight: 700;
+      margin: 0 0 6px 0;
+    }
+    #descText {
+      font-size: 13.5px;
+      line-height: 1.35;
+      margin: 0 0 12px 0;
+      color: #333;
+    }
+    #descCloseBtn {
+      background: #222;
+      color: #fff;
+      border: 0;
+      border-radius: 10px;
+      padding: 8px 12px;
+      font-size: 14px;
+      cursor: pointer;
+      width: 100%;
+    }
   </style>
 </head>
 <body>
@@ -134,6 +178,15 @@
 
   <div style="text-align:center;">
     <button id="applyBtn">✅ Apply Changes</button>
+  </div>
+
+  <!-- Mobile-friendly description sheet -->
+  <div id="descOverlay" role="dialog" aria-modal="true" aria-labelledby="descTitle">
+    <div id="descSheet">
+      <div id="descTitle"></div>
+      <div id="descText"></div>
+      <button id="descCloseBtn">Close</button>
+    </div>
   </div>
 
   <script>
@@ -182,7 +235,7 @@
         { name: "Vocal Smoothness", desc: "Smooth, non-raspy vocal quality." },
         { name: "Vocal Grittiness", desc: "Rough/raspy or gritty vocal texture." },
         { name: "Vocal Nasality", desc: "Nasal, pinched, ‘plugged-up’ vocal tone." },
-        { name: "Vocal Accompaniment", desc: "Importance of backing/secondary vocals (incl. vocal layers/samples)." },
+        { name: "Vocal Accompaniment", desc: "Importance of backing/secondary vocals (incl. layers/samples)." },
 
         // HARMONY 8-9
         { name: "Minor/Major Tonality", desc: "Whether the harmonic feel leans minor, major, or ambiguous." },
@@ -209,7 +262,7 @@
         { name: "Guitar Distortion", desc: "Amount of distortion from clean to dirty." },
         { name: "Acoustic Guitar", desc: "Presence/dominance of acoustic guitars." },
         { name: "String Ensemble", desc: "Presence of orchestral strings." },
-        { name: "Horn Ensemble", desc: "Presence of brass/woodwinds in ensemble context." },
+        { name: "Horn Ensemble", desc: "Presence of brass/woodwind ensemble textures." },
         { name: "Piano", desc: "Presence/dominance of piano." },
         { name: "Organ", desc: "Presence/dominance of organ." },
         { name: "Rhodes", desc: "Presence of Fender Rhodes/electric piano." },
@@ -245,23 +298,22 @@
         { name: "Focus Arrangement", desc: "Importance of orchestration/arrangement detail." },
         { name: "Focus Form", desc: "Importance of structure/sections." },
         { name: "Focus Riffs", desc: "Importance of repeating instrumental hooks/riffs." },
-        { name: "Focus Performance", desc: "Importance of instrumental/performer virtuosity/energy." },
+        { name: "Focus Performance", desc: "Importance of instrumental/performer energy/virtuosity." },
       ];
 
-      // Safety check
       while (DIM_DEFS.length < 58) DIM_DEFS.push({ name: "Unknown", desc: "No description available." });
 
       // -----------------------------
-      // 3) Categories (map to DIM_DEFS by index)
+      // 3) Categories
       // -----------------------------
       const categories = [
-        { name: "Vocals",        start: 0,  length: 7  },
-        { name: "Harmony",       start: 7,  length: 2  },
-        { name: "Rhythm",        start: 9,  length: 10 },
+        { name: "Vocals",          start: 0,  length: 7  },
+        { name: "Harmony",         start: 7,  length: 2  },
+        { name: "Rhythm",          start: 9,  length: 10 },
         { name: "Instrumentation", start: 19, length: 16 },
-        { name: "Lyrics",        start: 35, length: 8  },
-        { name: "Sonority",      start: 43, length: 6  },
-        { name: "Composition",   start: 49, length: 9  },
+        { name: "Lyrics",          start: 35, length: 8  },
+        { name: "Sonority",        start: 43, length: 6  },
+        { name: "Composition",     start: 49, length: 9  },
       ];
 
       // -----------------------------
@@ -386,7 +438,28 @@
       }
 
       // -----------------------------
-      // 8) Sliders + per-dim toggles + descriptions
+      // 8) Mobile-friendly description sheet
+      // -----------------------------
+      const descOverlay = document.getElementById('descOverlay');
+      const descTitle   = document.getElementById('descTitle');
+      const descText    = document.getElementById('descText');
+      const descCloseBtn = document.getElementById('descCloseBtn');
+
+      function openDesc(def) {
+        descTitle.textContent = def.name;
+        descText.textContent = def.desc;
+        descOverlay.classList.add('show');
+      }
+      function closeDesc() {
+        descOverlay.classList.remove('show');
+      }
+      descCloseBtn.addEventListener('click', closeDesc);
+      descOverlay.addEventListener('click', (e) => {
+        if (e.target === descOverlay) closeDesc();
+      });
+
+      // -----------------------------
+      // 9) Sliders + toggles + descriptions
       // -----------------------------
       const categoryEnabledChk = document.getElementById('categoryEnabledChk');
 
@@ -419,22 +492,23 @@
           useChk.checked = enabled;
           useChk.title = "Include this dimension in similarity";
 
-          // Name + tooltip
+          // Name + info button
           const nameWrap = document.createElement('span');
           nameWrap.className = 'dim-name-wrap';
 
           const nameSpan = document.createElement('span');
           nameSpan.className = 'dim-name';
           nameSpan.textContent = def.name;
-          nameSpan.title = def.desc;
 
-          const info = document.createElement('span');
-          info.className = 'info-dot';
-          info.textContent = "ℹ️";
-          info.title = def.desc;
+          const infoBtn = document.createElement('button');
+          infoBtn.type = "button";
+          infoBtn.className = 'info-dot-btn';
+          infoBtn.textContent = "i";
+          infoBtn.setAttribute("aria-label", `Info: ${def.name}`);
+          infoBtn.addEventListener('click', () => openDesc(def));
 
           nameWrap.appendChild(nameSpan);
-          nameWrap.appendChild(info);
+          nameWrap.appendChild(infoBtn);
 
           // Slider
           const slider = document.createElement('input');
@@ -481,13 +555,13 @@
         categoryEnabledChk.onchange = () => {
           const enabled = categoryEnabledChk.checked;
           setCategoryEnabled(catIndex, enabled);
-          renderDetailCategory(catIndex); // re-render rows
+          renderDetailCategory(catIndex);
           renderMainRadar();
         };
       }
 
       // -----------------------------
-      // 9) Initial render
+      // 10) Initial render
       // -----------------------------
       renderMainRadar();
       renderDetailCategory(0);
@@ -498,7 +572,7 @@
       });
 
       // -----------------------------
-      // 10) Apply changes -> send vector + mask
+      // 11) Apply changes -> send vector + mask
       // -----------------------------
       document.getElementById('applyBtn').addEventListener('click', () => {
         const fromYear = parseInt(yearFromSel.value, 10);
